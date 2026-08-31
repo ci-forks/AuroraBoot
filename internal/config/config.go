@@ -116,9 +116,22 @@ func ReadConfig(fileConfig, cloudConfig string, options []string) (*schema.Confi
 		return c, r, err
 	}
 
-	yaml.Unmarshal(y, c)
-	yaml.Unmarshal(y, r)
-	yaml.Unmarshal(y, &templateValues)
+	// Apply the --set values (as YAML) onto each target. Surface unmarshal
+	// errors instead of dropping them: a malformed value (e.g. a non-boolean for
+	// a boolean field) used to be silently ignored, leaving the field at its
+	// zero value and the operator none the wiser. Config and ReleaseArtifact
+	// share no field names, so a --set meant for one is simply an unknown key to
+	// the other (ignored, no error) — only a genuine type mismatch on a field
+	// that target owns produces an error.
+	if err := yaml.Unmarshal(y, c); err != nil {
+		return c, r, fmt.Errorf("applying --set values to config: %w", err)
+	}
+	if err := yaml.Unmarshal(y, r); err != nil {
+		return c, r, fmt.Errorf("applying --set values to release artifact: %w", err)
+	}
+	if err := yaml.Unmarshal(y, &templateValues); err != nil {
+		return c, r, fmt.Errorf("applying --set values to template values: %w", err)
+	}
 
 	if cloudConfig != "" {
 		var err error
