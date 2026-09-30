@@ -1,0 +1,41 @@
+# AuroraBoot#886 QA log. PR head 4306897d, base main 81ff15e. Servers: 8111 PR (no flag, catalog saved in Settings during run), 8122 PR --extensions-catalog http://127.0.0.1:8133/flag-catalog.json, 8144 main. POST /api/v1/artifacts intercepted with CDP Fetch (answered 500) so no build ran.
+##### flavor switch Hadron(drbd) -> Ubuntu, mode=revisit, port=8111
+ext card after switch: {"catalogValue":"http://127.0.0.1:8133/saved-catalog.json","placeholder":"https://example.com/extensions/releases.json","cardText":"Catalog\nLoad\nqa-ubuntu-ext\n\nFake extension served by the QA catalog\n\nThis catalog publishes nothing for amd64 for drbd. The build will fail unless you deselect them or pick another architecture."}
+review summary: "EXTENSIONS\nEdit\nInstall after boot\nNone\nBake into the image\ndrbd\nACCESS\nEdit\nUser\nDefault user\ndefault password\nSSH keys\n0 SSH keys\nInstall\nAuto-install on firs"
+CREATE BODY: {"baseImage":"ubuntu:24.04","dockerfile":false,"extensions":["drbd"],"extensionsCatalogs":["http://127.0.0.1:8133/saved-catalog.json"]}
+##### flavor switch Hadron(drbd) -> Ubuntu, mode=revisit, port=8144
+ext card after switch: {"catalogValue":"https://kairos-io.github.io/hadron-layers/releases.json","placeholder":"https://kairos-io.github.io/hadron-layers/releases.json","cardText":"Catalog\nLoad\ndrbd\n\nOut-of-tree DRBD 9 kernel module and drbd-utils\n\nLatest (9.3.4)\nLatest (9.3.4)\n9.3.4\n9.3.3\nfwupd\n\nFirmware update daemon\n\ngpg\n\nGnuPG and its runtime libraries\n\ntailscale\n\nTailscale node agent (tailscaled) and CLI"}
+review summary: "EXTENSIONS\nEdit\nInstall after boot\nNone\nBake into the image\ndrbd\nACCESS\nEdit\nUser\nDefault user\ndefault password\nSSH keys\n0 SSH keys\nInstall\nAuto-install on firs"
+CREATE BODY: {"baseImage":"ubuntu:24.04","dockerfile":false,"extensions":["drbd"]}
+##### flavor switch Hadron(drbd) -> Ubuntu, mode=jump, port=8111
+review summary: "EXTENSIONS\nEdit\nInstall after boot\nNone\nBake into the image\ndrbd\nACCESS\nEdit\nUser\nDefault user\ndefault password\nSSH keys\n0 SSH keys\nInstall\nAuto-install on firs"
+CREATE BODY: {"baseImage":"ubuntu:24.04","dockerfile":false,"extensions":["drbd"],"extensionsCatalogs":["https://kairos-io.github.io/hadron-layers/releases.json"]}
+##### flavor switch Hadron(drbd) -> Ubuntu, mode=jump, port=8144
+review summary: "EXTENSIONS\nEdit\nInstall after boot\nNone\nBake into the image\ndrbd\nACCESS\nEdit\nUser\nDefault user\ndefault password\nSSH keys\n0 SSH keys\nInstall\nAuto-install on firs"
+CREATE BODY: {"baseImage":"ubuntu:24.04","dockerfile":false,"extensions":["drbd"]}
+##### Ubuntu, flag catalog (8122)
+ext card: {"catalogValue":"http://127.0.0.1:8133/flag-catalog.json","placeholder":"https://example.com/extensions/releases.json","cardText":"Catalog\nLoad\nqa-ubuntu-ext\n\nFake extension served by the QA catalog\n\nLatest (1.0.0)\nLatest (1.0.0)\n1.0.0"}
+review buttons: Logout | Base | System | Extensions | Access | Output | 6Review | Edit | Edit | Edit | Edit | Edit | Edit | Back | Start build
+CREATE BODY: [
+  '{"baseImage":"ubuntu:24.04","dockerfile":false,"extensions":["qa-ubuntu-ext"],"extensionsCatalogs":["http://127.0.0.1:8133/flag-catalog.json"]}'
+]
+##### Hadron drbd (8111)
+ext card: {"catalogValue":"https://kairos-io.github.io/hadron-layers/releases.json","placeholder":"https://kairos-io.github.io/hadron-layers/releases.json","cardText":"Catalog\nhttps://kairos-io.github.io/hadron-layers/releases.json\nhttp://127.0.0.1:8133/saved-catalog.json\nLoad\ndrbd\n\nOut-of-tree DRBD 9 kernel module and drbd-utils\n\nLatest (9.3.4)\nLatest (9.3.4)\n9.3.4\n9.3.3\nfwupd\n\nFirmware update daemon\n\ngpg\n\nGnuPG and its runtime libraries\n\ntailscale\n\nTailscale node agent (tailscaled) and CLI"}
+review buttons: Logout | Base | System | Extensions | Access | Output | 6Review | Edit | Edit | Edit | Edit | Edit | Edit | Back | Start build
+CREATE BODY: [
+  '{"baseImage":"ghcr.io/kairos-io/hadron:v0.5.3","dockerfile":false,"extensions":["drbd"]}'
+]
+##### Ubuntu drbd on main (8144)
+ext card: {"catalogValue":"https://kairos-io.github.io/hadron-layers/releases.json","placeholder":"https://kairos-io.github.io/hadron-layers/releases.json","cardText":"Catalog\nLoad\ndrbd\n\nOut-of-tree DRBD 9 kernel module and drbd-utils\n\nLatest (9.3.4)\nLatest (9.3.4)\n9.3.4\n9.3.3\nfwupd\n\nFirmware update daemon\n\ngpg\n\nGnuPG and its runtime libraries\n\ntailscale\n\nTailscale node agent (tailscaled) and CLI"}
+review buttons: Logout | Base | System | Extensions | Access | Output | 6Review | Edit | Edit | Edit | Edit | Edit | Edit | Back | Start build
+CREATE BODY: [
+  '{"baseImage":"ubuntu:24.04","dockerfile":false,"extensions":["drbd"]}'
+]
+##### catalog server access log
+2026-09-30T08:02:13.829Z GET /x.json origin=-
+2026-09-30T08:04:50.917Z GET /flag-catalog.json origin=http://127.0.0.1:8122
+2026-09-30T08:05:24.483Z GET /flag-catalog.json origin=http://127.0.0.1:8122
+2026-09-30T08:05:45.923Z GET /flag-catalog.json origin=http://127.0.0.1:8122
+2026-09-30T08:10:36.580Z GET /saved-catalog.json origin=http://127.0.0.1:8111
+2026-09-30T08:12:25.760Z GET /saved-catalog.json origin=http://127.0.0.1:8111
+2026-09-30T08:14:02.767Z GET /flag-catalog.json origin=http://127.0.0.1:8122
