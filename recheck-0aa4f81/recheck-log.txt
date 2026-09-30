@@ -1,0 +1,47 @@
+QA re-check of kairos-io/AuroraBoot#886 at head 0aa4f815 (merge base main 81ff15e)
+Servers: :8111 PR, no catalog flag | :8122 PR, --extensions-catalog http://127.0.0.1:8133/flag-catalog.json
+Local catalog server :8133 publishes one fake extension, qa-ubuntu-ext. POST /api/v1/artifacts intercepted over CDP, body recorded, 500 returned.
+
+== Previous FAIL path: Hadron, tick drbd, Next to Review, Base -> Ubuntu 24.04, stepper jump to Review, Start build (s4.js MODE=jump)
+:8111 review "Bake into the image: None"
+:8111 CREATE BODY: {"baseImage":"ubuntu:24.04","dockerfile":false}
+:8122 review "Bake into the image: drbd"
+:8122 CREATE BODY: {"baseImage":"ubuntu:24.04","dockerfile":false,"extensions":["drbd"],"extensionsCatalogs":["http://127.0.0.1:8133/flag-catalog.json"]}
+
+== Same, but re-open Extensions after the switch (s4.js MODE=revisit)
+:8111 card: "No catalog is set, so drbd will not be baked into the image. Pick a catalog to keep them."
+:8111 CREATE BODY: {"baseImage":"ubuntu:24.04","dockerfile":false}
+:8122 card: catalog=http://127.0.0.1:8133/flag-catalog.json, "This catalog publishes nothing for amd64 for drbd. The build will fail unless you deselect them or pick another architecture."
+:8122 CREATE BODY: {"baseImage":"ubuntu:24.04","dockerfile":false,"extensions":["drbd"],"extensionsCatalogs":["http://127.0.0.1:8133/flag-catalog.json"]}
+
+== Original acceptance (s3.js)
+:8111 Ubuntu: catalog field empty, suggestion panel shown, catalog requests: []  body {"baseImage":"ubuntu:24.04","dockerfile":false}
+:8111 Hadron+drbd: hadron-layers loaded (drbd fwupd gpg tailscale) body {"baseImage":"ghcr.io/kairos-io/hadron:v0.5.3","dockerfile":false,"extensions":["drbd"]}
+:8122 Ubuntu+qa-ubuntu-ext: flag catalog loaded body {"baseImage":"ubuntu:24.04","dockerfile":false,"extensions":["qa-ubuntu-ext"],"extensionsCatalogs":["http://127.0.0.1:8133/flag-catalog.json"]}
+:8122 Hadron+drbd: both catalogs offered, hadron-layers selected body {"baseImage":"ghcr.io/kairos-io/hadron:v0.5.3","dockerfile":false,"extensions":["drbd"]}
+
+== What the fix changed (s5.js)
+override-hadron :8122 Hadron, click flag catalog, tick qa-ubuntu-ext, Base -> Ubuntu, jump:
+  {"baseImage":"ubuntu:24.04","extensions":["qa-ubuntu-ext"],"extensionsCatalogs":["http://127.0.0.1:8133/flag-catalog.json"]}
+override-use :8111 Ubuntu, click Use on hadron-layers, tick drbd, Base -> Fedora, jump:
+  {"baseImage":"fedora:44","extensions":["drbd"],"extensionsCatalogs":["https://kairos-io.github.io/hadron-layers/releases.json"]}
+roundtrip :8111 Hadron+drbd -> Ubuntu (jump, summary "None") -> Hadron (jump, summary "drbd"):
+  {"baseImage":"ghcr.io/kairos-io/hadron:v0.5.3","extensions":["drbd"]}
+typed :8111 Hadron, type http://127.0.0.1:8133/typed.json: picker "Catalog\nLoad" (empty, no fetch); Load -> qa-ubuntu-ext listed, catsrv logs one GET /typed.json
+  {"baseImage":"ghcr.io/kairos-io/hadron:v0.5.3","extensions":["qa-ubuntu-ext"],"extensionsCatalogs":["http://127.0.0.1:8133/typed.json"]}
+clone (placeholder records inserted in artifact_records, not real builds):
+  source ubuntu + drbd, no catalog  -> {"baseImage":"ubuntu:24.04","extensions":["drbd"],"extensionsCatalogs":["https://kairos-io.github.io/hadron-layers/releases.json"]}
+  source ubuntu + qa-ubuntu-ext + flag catalog -> {"baseImage":"ubuntu:24.04","extensions":["qa-ubuntu-ext"],"extensionsCatalogs":["http://127.0.0.1:8133/flag-catalog.json"]}
+
+== Settings endpoint :8111
+GET without auth -> 401
+PUT {"saved":["ftp://x/y"]} -> 400 use an http or https URL
+PUT {"saved":["javascript:alert(1)"]} -> 400
+PUT {"saved":[" http://127.0.0.1:8133/saved.json ","http://127.0.0.1:8133/saved.json",""]} -> 200 {"launch":[],"saved":["http://127.0.0.1:8133/saved.json"]}
+Ubuntu build then loads it: {"baseImage":"ubuntu:24.04","extensions":["qa-ubuntu-ext"],"extensionsCatalogs":["http://127.0.0.1:8133/saved.json"]}
+Jump path with saved catalog: {"baseImage":"ubuntu:24.04","extensions":["drbd"],"extensionsCatalogs":["http://127.0.0.1:8133/saved.json"]}; Review page text has no "publishes nothing" warning (it shows only on the Extensions step)
+
+== Unit tests at 0aa4f815
+npx vitest run: 49 files, 346 passed; npx tsc -b clean
+go test ./pkg/handlers/ ./pkg/server/ ./internal/cmd/: ok ok ok
+Console errors: only the intentional "ApiError: qa intercept".
