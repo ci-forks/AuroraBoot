@@ -1,0 +1,64 @@
+{
+  "scenario": "none",
+  "label": "pr",
+  "url": "http://127.0.0.1:8122/artifacts/1afeb5fc-c3b5-450a-a9fb-5c07f6ccbf5e",
+  "status": 201,
+  "payload": {
+    "name": "qa-none",
+    "baseImage": "ghcr.io/kairos-io/hadron:v0.6.3",
+    "kairosVersion": "v4.3.0",
+    "model": "generic",
+    "arch": "amd64",
+    "variant": "core",
+    "allow-insecure-registries": false,
+    "hadronBase": "ghcr.io/kairos-io/hadron:v0.6.3",
+    "hadronFirmware": [],
+    "hadronLayers": [],
+    "outputs": {
+      "iso": true,
+      "cloudImage": false,
+      "netboot": false,
+      "rawDisk": false,
+      "tar": false,
+      "gce": false,
+      "vhd": false,
+      "maas": false,
+      "uki": false,
+      "fips": false,
+      "trustedBoot": false
+    },
+    "signing": {
+      "ukiKeySetId": "",
+      "ukiSecureBootEnroll": "if-safe"
+    },
+    "provisioning": {
+      "autoInstall": true,
+      "registerAuroraBoot": true,
+      "targetGroupId": "",
+      "allowedCommands": [
+        "upgrade",
+        "upgrade-recovery",
+        "reboot",
+        "unregister"
+      ],
+      "userMode": "default"
+    }
+  },
+  "id": "1afeb5fc-c3b5-450a-a9fb-5c07f6ccbf5e",
+  "storedArch": "amd64",
+  "storedHierarchies": {
+    "sysext": null,
+    "confext": null
+  },
+  "storedRecordKeys": [
+    "extensionHierarchies"
+  ],
+  "storedExtFields": {
+    "extensionHierarchies": {
+      "sysext": null,
+      "confext": null
+    }
+  },
+  "bundleStatus": 200,
+  "bundle": []
+}
