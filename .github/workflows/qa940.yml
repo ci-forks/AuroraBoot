@@ -1,0 +1,19 @@
+name: QA940 concurrency
+on:
+  pull_request:
+    branches:
+      - qa940-main
+  # Without a run on main this job has no known-good baseline: a flake can
+  # only ever surface as somebody else's red pull request.
+  push:
+    branches:
+      - qa940-main
+  workflow_dispatch:
+concurrency:
+  group: test-riscv64-${{ github.head_ref || github.ref }}-${{ github.repository }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+jobs:
+  stand-in:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "event=${{ github.event_name }} sha=${{ github.sha }}"; sleep 180
